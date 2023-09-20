@@ -7,47 +7,75 @@ import (
 	"strings"
 )
 
-func count(nums []int) int {
-	if len(nums) < 2 {
-		return 0
-	}
-	// 定义子问题
-	dp := make([]int, len(nums)+1)
-	dp[0] = 0
-	dp[1] = 0
-	for i := 2; i <= len(nums); i++ {
-		add := 0
-		for j := 1; j < i; j++ {
-			if isPerfect(nums[i-1] * nums[j-1]) {
-				add++
-			}
-		}
-		dp[i] = dp[i-1] + add
-	}
-	return dp[len(nums)]
-
-}
-
-func isPerfect(num int) bool {
-	if num <= 9 && num >= 1 {
-		return true
-	} else if num%10 == 0 {
-		return true
-	}
-	return false
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
 }
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
-
-	readString, _ := reader.ReadString(']')
-	s := readString[1 : len(readString)-1]
-	split := strings.Split(s, ",")
+	scanner := bufio.NewReader(os.Stdin)
+	text, _ := scanner.ReadString('}')
+	strSlice := strings.Split(text[1:len(text)-1], ",")
 	nums := []int{}
-	for _, v := range split {
+	for _, v := range strSlice {
 		var num int
+		if v == " #" {
+			v = "-1"
+		}
 		fmt.Sscanf(v, "%d", &num)
 		nums = append(nums, num)
 	}
-	fmt.Println(count(nums))
+	bree := constructBree(nums)
+	res := 0
+	helper(bree, 0, 0, &res)
+	fmt.Println(res)
+}
+
+func helper(root *TreeNode, one, zone int, ans *int) {
+	if root.Val == 0 {
+		zone += 1
+	} else {
+		one += 1
+	}
+	if root.Left != nil {
+		helper(root.Left, one, zone, ans)
+	}
+	if root.Right != nil {
+		helper(root.Right, one, zone, ans)
+	}
+	if one == zone+1 && root.Left == nil && root.Right == nil {
+		*ans += 1
+	}
+
+}
+
+// 广度优先搜索构建二叉树
+func constructBree(nums []int) *TreeNode {
+	if len(nums) == 0 {
+		return nil
+	}
+	root := &TreeNode{Val: nums[0]}
+	queue := []*TreeNode{root}
+	index := 1
+	for index < len(nums) {
+		node := queue[0]
+		queue = queue[1:]
+		if nums[index] != -1 {
+			leftNode := &TreeNode{Val: nums[index]}
+			queue = append(queue, leftNode)
+			node.Left = leftNode
+		}
+		index++
+		if index >= len(nums) {
+			break
+		}
+		if nums[index] != -1 {
+			rightNode := &TreeNode{Val: nums[index]}
+			queue = append(queue, rightNode)
+			node.Right = rightNode
+		}
+		index++
+	}
+	return root
 }
